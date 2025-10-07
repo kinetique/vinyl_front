@@ -1,55 +1,111 @@
-import React, { useEffect, useState } from "react";
-import "./AlbumDetail.css";
+import React, { useState, useEffect } from 'react';
+import { albumsAPI } from '../services/api';
+import '../App.css';
 
-function AlbumDetail({ albumId }) {
+const AlbumDetail = ({ albumId, onBack }) => {
     const [album, setAlbum] = useState(null);
     const [tracks, setTracks] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Отримуємо деталі альбому
     useEffect(() => {
-        fetch(`http://127.0.0.1:8000/albums/${albumId}`)
-            .then((res) => {
-                if (!res.ok) throw new Error("Album not found");
-                return res.json();
-            })
-            .then((data) => setAlbum(data))
-            .catch((err) => setError(err.message));
+        const fetchAlbumData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const albumData = await albumsAPI.getById(albumId);
+                setAlbum(albumData);
+
+                try {
+                    const tracksData = await albumsAPI.getTracks(albumId);
+                    setTracks(tracksData);
+                } catch (err) {
+                    console.log('Tracks not found');
+                }
+            } catch (err) {
+                setError(err.message);
+            }
+            setLoading(false);
+        };
+
+        fetchAlbumData();
     }, [albumId]);
 
-    // Отримуємо треки
-    useEffect(() => {
-        fetch(`http://127.0.0.1:8000/albums/${albumId}/tracks`)
-            .then((res) => {
-                if (!res.ok) throw new Error("Tracks not found");
-                return res.json();
-            })
-            .then((data) => setTracks(data))
-            .catch((err) => console.error(err));
-    }, [albumId]);
+    if (loading) {
+        return <div className="container"><div className="loading">Loading...</div></div>;
+    }
 
-    if (error) return <div className="error">Error: {error}</div>;
-    if (!album) return <p>Loading album details...</p>;
+    if (error) {
+        return <div className="container"><div className="error">{error}</div></div>;
+    }
+
+    if (!album) {
+        return null;
+    }
 
     return (
-        <div className="album-detail">
-            <h2>{album.title}</h2>
-            <p><strong>Artist:</strong> {album.artist}</p>
-            <p><strong>Label:</strong> {album.label}</p>
-            <p><strong>Year:</strong> {album.year}</p>
-            <p><strong>Genre:</strong> {album.genre}</p>
-            <p><strong>Style:</strong> {album.style}</p>
-            <p><strong>Price:</strong> ${album.price}</p>
-            <p><strong>Available:</strong> {album.available ? "Yes" : "No"}</p>
+        <div className="container">
+            <button onClick={onBack} className="back-button">
+                Back to albums
+            </button>
 
-            <h3>Tracks:</h3>
-            <ul>
-                {tracks.map((track) => (
-                    <li key={track.id}>{track.title}</li>
-                ))}
-            </ul>
+            <div className="detail-card">
+                <div className="detail-grid">
+                    <div className="detail-image">
+                        <div className="album-cover-large">
+                            <div className="vinyl-icon-xlarge">♫</div>
+                        </div>
+                    </div>
+
+                    <div className="detail-info">
+                        <h2 className="detail-title">{album.title}</h2>
+                        <p className="detail-artist">{album.artist}</p>
+
+                        <div className="info-table">
+                            <div className="info-row">
+                                <span className="info-label">Label:</span>
+                                <span className="info-value">{album.label}</span>
+                            </div>
+                            <div className="info-row">
+                                <span className="info-label">Year:</span>
+                                <span className="info-value">{album.year}</span>
+                            </div>
+                            <div className="info-row">
+                                <span className="info-label">Genre:</span>
+                                <span className="info-value">{album.genre}</span>
+                            </div>
+                            <div className="info-row">
+                                <span className="info-label">Style:</span>
+                                <span className="info-value">{album.style}</span>
+                            </div>
+                            <div className="info-row">
+                                <span className="info-label">Available:</span>
+                                <span className={`info-value ${album.available ? 'available' : 'unavailable'}`}>
+                  {album.available ? 'Yes' : 'No'}
+                </span>
+                            </div>
+                        </div>
+
+                        <div className="detail-price">${album.price}</div>
+
+                        {tracks && tracks.length > 0 && (
+                            <div className="tracks-section">
+                                <h3 className="tracks-title">Tracks:</h3>
+                                <div className="tracks-list">
+                                    {tracks.map((track, index) => (
+                                        <div key={track.id} className="track-item">
+                                            <span className="track-number">{index + 1}.</span>
+                                            <span className="track-title">{track.title}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
-}
+};
 
 export default AlbumDetail;

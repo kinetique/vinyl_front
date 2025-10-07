@@ -1,45 +1,57 @@
-import React, { useEffect, useState } from "react";
-import "./AlbumList.css";
+import React, { useState, useEffect } from 'react';
+import { artistsAPI } from '../services/api';
+import '../App.css';
 
-function AlbumList({ onAlbumClick }) {
-    const [albums, setAlbums] = useState([]);
+const ArtistList = ({ onSelectArtist }) => {
+    const [artists, setArtists] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetch("http://127.0.0.1:8000/albums/")
-            .then((res) => {
-                if (!res.ok) throw new Error("Network error: " + res.status);
-                return res.json();
-            })
-            .then((data) => setAlbums(data))
-            .catch((err) => {
-                console.error(err);
+        const fetchArtists = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const data = await artistsAPI.getAll();
+                setArtists(data);
+            } catch (err) {
                 setError(err.message);
-            });
+                console.error(err);
+            }
+            setLoading(false);
+        };
+
+        fetchArtists();
     }, []);
 
-    if (error) return <div className="error">Error: {error}</div>;
-
     return (
-        <div className="albums-section">
-            <h2>Albums</h2>
-            {albums.length === 0 ? (
-                <p>No albums found.</p>
+        <div className="container">
+            <h2 className="page-title">Artists</h2>
+
+            {loading ? (
+                <div className="loading">Loading...</div>
+            ) : error ? (
+                <div className="error">{error}</div>
+            ) : artists.length === 0 ? (
+                <div className="no-data">Artists not found</div>
             ) : (
-                <ul className="album-list">
-                    {albums.map((album) => (
-                        <li
-                            key={album.id}
-                            className="album-item"
-                            onClick={() => onAlbumClick && onAlbumClick(album.id)}
+                <div className="grid">
+                    {artists.map((artist) => (
+                        <div
+                            key={artist.id}
+                            onClick={() => onSelectArtist(artist.id)}
+                            className="card artist-card"
                         >
-                            <strong>{album.title}</strong> by {album.artist} (${album.price})
-                        </li>
+                            <div className="artist-avatar">
+                                <span className="avatar-icon">👤</span>
+                            </div>
+                            <h3 className="card-title">{artist.name}</h3>
+                        </div>
                     ))}
-                </ul>
+                </div>
             )}
         </div>
     );
-}
+};
 
-export default AlbumList;
+export default ArtistList;

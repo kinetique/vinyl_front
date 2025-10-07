@@ -1,51 +1,103 @@
-import React, { useEffect, useState } from "react";
-import "./AlbumList.css"; // для стилів
+import React, { useState, useEffect } from 'react';
+import { albumsAPI } from '../services/api';
+import '../App.css';
 
-function AlbumList({ onAlbumClick }) {
+const AlbumList = ({ onSelectAlbum }) => {
     const [albums, setAlbums] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState('');
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        fetch("http://127.0.0.1:8000/albums/")
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Network error: " + response.status);
-                }
-                return response.json();
-            })
-            .then((data) => setAlbums(data))
-            .catch((error) => {
-                console.error("Error fetching albums:", error);
-                setError(error.message);
-            });
-    }, []);
+    const fetchAlbums = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await albumsAPI.getAll(searchQuery, sortBy);
+            setAlbums(data);
+        } catch (err) {
+            setError(err.message);
+            console.error(err);
+        }
+        setLoading(false);
+    };
 
-    if (error) {
-        return <div className="error">Error: {error}</div>;
-    }
+    useEffect(() => {
+        fetchAlbums();
+    }, [sortBy]);
+
+    const handleSearch = () => {
+        fetchAlbums();
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
 
     return (
-        <div className="albums-section">
-            <h1>Albums</h1>
-            {albums.length === 0 ? (
-                <p>No albums found.</p>
+        <div className="container">
+            <div className="search-section">
+                <div className="search-bar">
+                    <input
+                        type="text"
+                        placeholder="Search by title, artist, genre..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        className="search-input"
+                    />
+                    <button onClick={handleSearch} className="search-button">
+                        Search
+                    </button>
+                </div>
+
+                <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="sort-select"
+                >
+                    <option value="">Sorting</option>
+                    <option value="price_asc">Price: ascending</option>
+                    <option value="price_desc">Price: descending</option>
+                    <option value="popularity">Popularity</option>
+                    <option value="genre">Genre</option>
+                    <option value="release_date_asc">Release date: ascending</option>
+                    <option value="release_date_desc">Release date: descending</option>
+                </select>
+            </div>
+
+            {/* Albums Grid */}
+            {loading ? (
+                <div className="loading">Loading...</div>
+            ) : error ? (
+                <div className="error">{error}</div>
+            ) : albums.length === 0 ? (
+                <div className="no-data">Albums not found</div>
             ) : (
-                <ul className="album-list">
+                <div className="grid">
                     {albums.map((album) => (
-                        <li
+                        <div
                             key={album.id}
-                            className="album-item"
-                            onClick={() => onAlbumClick && onAlbumClick(album.id)}
-                            style={{ cursor: "pointer" }}
+                            onClick={() => onSelectAlbum(album.id)}
+                            className="card album-card"
                         >
-                            <span className="album-title">{album.title}</span>{" "}
-                            <span className="album-artist">by {album.artist}</span>
-                        </li>
+                            <div className="album-cover">
+                                <div className="vinyl-icon-large">♫</div>
+                            </div>
+                            <h3 className="card-title">{album.title}</h3>
+                            <p className="card-artist">{album.artist}</p>
+                            <div className="card-footer">
+                                <span className="genre-badge">{album.genre}</span>
+                                <span className="price">${album.price}</span>
+                            </div>
+                        </div>
                     ))}
-                </ul>
+                </div>
             )}
         </div>
     );
-}
+};
 
 export default AlbumList;
