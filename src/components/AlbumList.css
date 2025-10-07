@@ -1,0 +1,21 @@
+.albums-section {
+    margin: 20px;
+}
+
+.album-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.album-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.album-item:hover {
+    background-color: #f0f0f0;
+}
