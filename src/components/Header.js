@@ -1,7 +1,15 @@
 import React from 'react';
+import { useAuth } from '../context/AuthContext';
 import '../App.css';
 
 const Header = ({ currentView, onNavigate }) => {
+    const { user, logout, isAuthenticated } = useAuth();
+
+    const handleLogout = async () => {
+        await logout();
+        onNavigate('public');
+    };
+
     return (
         <header className="header">
             <div className="header-container">
@@ -32,6 +40,38 @@ const Header = ({ currentView, onNavigate }) => {
                     >
                         Labels
                     </button>
+
+                    {isAuthenticated ? (
+                        <>
+                            <button
+                                onClick={() => onNavigate('profile')}
+                                className={`nav-button ${currentView === 'profile' ? 'active' : ''}`}
+                            >
+                                👤 {user?.username}
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                className="nav-button logout-btn"
+                            >
+                                Logout
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => onNavigate('login')}
+                                className={`nav-button ${currentView === 'login' ? 'active' : ''}`}
+                            >
+                                Login
+                            </button>
+                            <button
+                                onClick={() => onNavigate('register')}
+                                className={`nav-button register-btn ${currentView === 'register' ? 'active' : ''}`}
+                            >
+                                Register
+                            </button>
+                        </>
+                    )}
                 </nav>
             </div>
         </header>

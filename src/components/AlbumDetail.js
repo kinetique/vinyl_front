@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { albumsAPI } from '../services/api';
 import '../App.css';
+import AlbumReviews from "./AlbumReviews";
 
 const AlbumDetail = ({ albumId, onBack }) => {
     const [album, setAlbum] = useState(null);
@@ -103,6 +104,7 @@ const AlbumDetail = ({ albumId, onBack }) => {
                         )}
                     </div>
                 </div>
+                <AlbumReviews albumId={albumId} />
             </div>
         </div>
     );
