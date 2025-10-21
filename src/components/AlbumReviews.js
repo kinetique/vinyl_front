@@ -95,12 +95,11 @@ const AlbumReviews = ({ albumId }) => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({...newReview,
-                    album: albumId})
+                body: JSON.stringify({
+                    rating: newReview.rating,
+                    comment: newReview.comment,
+                })
             });
-
-            const data = await response.json();
-            console.log('Response from server:', data);
 
             if (response.ok) {
                 const data = await response.json();
@@ -193,13 +192,10 @@ const AlbumReviews = ({ albumId }) => {
                             <div className="review-header">
                                 <div className="review-user">
                                     <div className="user-avatar">
-                                        {review.user?.username?.charAt(0).toUpperCase() || 'U'}
+                                        {review.username?.charAt(0).toUpperCase() || 'U'}
                                     </div>
                                     <div className="user-info">
-                                        <span className="username">{review.user?.username || 'Anonymous'}</span>
-                                        <span className="review-date">
-                                            {new Date(review.created_at).toLocaleDateString()}
-                                        </span>
+                                        <span className="username">{review.username || 'Anonymous'}</span>
                                     </div>
                                 </div>
                                 <div className="review-rating">{renderStars(review.rating)}</div>
